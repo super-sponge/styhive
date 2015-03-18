@@ -40,10 +40,8 @@
   select decode('5BB6A40B0CEA149B0A1645E74C7E460C','fkey','skey','tkey') from tmp;
 ### hiveJdbc 使用
   详细参考 com.sponge.srd.hive.HiveServer2Client
-
 ### hive 常用命令
-
-* system command
+#### system command
 ! <command>
 dfs <dfs command>
 <query string>
@@ -52,16 +50,14 @@ source FILE <filepath>
 set [-v]
 reset
 exit/quit
-
-* Hive Resources
+#### Hive Resources
 add [FILE|JAR|ARCHIVE] <value> [<value>]*
 list [FILE|JAR|ARCHIVE] [<value> [<value>]*]
 delete [FILE|JAR|ARCHIVE] <value> [<value>]*
-
-* logging
+#### logging
 hive --hiveconf hive.root.logger=INFO,console
+#### Hive Command Line Options
 
-* Hive Command Line Options
  -d,--define <key=value>          Variable substitution to apply to hive
                                   commands. e.g. -d A=B or --define A=B
  -e <quoted-query-string>         SQL from command line
