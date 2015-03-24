@@ -401,10 +401,11 @@
 * SELECT /*+ MAPJOIN(b) */ a.key, a.value   FROM a JOIN b ON a.key = b.key set hive.optimize.bucketmapjoin = true
 * If all the inputs are bucketed or sorted, and the join should be converted to a bucketized map-side join or bucketized sort-merge join.
 * 关于join更多信息请参考 [HiveJoins] [2]
+
 ### mapjoin  bucket
-set hive.input.format=org.apache.hadoop.hive.ql.io.BucketizedHiveInputFormat;
-set hive.optimize.bucketmapjoin = true;
-set hive.optimize.bucketmapjoin.sortedmerge = true;
+    set hive.input.format=org.apache.hadoop.hive.ql.io.BucketizedHiveInputFormat;
+    set hive.optimize.bucketmapjoin = true;
+    set hive.optimize.bucketmapjoin.sortedmerge = true;
 
 ## 参考
 获取详细信息，请参考 [HiveDDL] [1]
