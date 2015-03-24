@@ -316,13 +316,102 @@
     Show Transactions
     Show Compactions
 
+### hive dml 操作
+#### 基本语法
+    LOAD DATA [LOCAL] INPATH 'filepath' [OVERWRITE] INTO TABLE tablename [PARTITION (partcol1=val1, partcol2=val2 ...)]
 
+    Standard syntax:
+    INSERT OVERWRITE TABLE tablename1 [PARTITION (partcol1=val1, partcol2=val2 ...) [IF NOT EXISTS]] select_statement1 FROM from_statement;
+    INSERT INTO TABLE tablename1 [PARTITION (partcol1=val1, partcol2=val2 ...)] select_statement1 FROM from_statement;
+
+    Hive extension (multiple inserts):
+    FROM from_statement
+    INSERT OVERWRITE TABLE tablename1 [PARTITION (partcol1=val1, partcol2=val2 ...) [IF NOT EXISTS]] select_statement1
+    [INSERT OVERWRITE TABLE tablename2 [PARTITION ... [IF NOT EXISTS]] select_statement2]
+    [INSERT INTO TABLE tablename2 [PARTITION ...] select_statement2] ...;
+    FROM from_statement
+    INSERT INTO TABLE tablename1 [PARTITION (partcol1=val1, partcol2=val2 ...)] select_statement1
+    [INSERT INTO TABLE tablename2 [PARTITION ...] select_statement2]
+    [INSERT OVERWRITE TABLE tablename2 [PARTITION ... [IF NOT EXISTS]] select_statement2] ...;
+
+    Hive extension (dynamic partition inserts):
+    INSERT OVERWRITE TABLE tablename PARTITION (partcol1[=val1], partcol2[=val2] ...) select_statement FROM from_statement;
+    INSERT INTO TABLE tablename PARTITION (partcol1[=val1], partcol2[=val2] ...) select_statement FROM from_statement;
+
+    INSERT OVERWRITE [LOCAL] DIRECTORY directory1
+      [ROW FORMAT row_format] [STORED AS file_format] (Note: Only available starting with Hive 0.11.0)
+      SELECT ... FROM ...
+
+    Hive extension (multiple inserts):
+    FROM from_statement
+    INSERT OVERWRITE [LOCAL] DIRECTORY directory1 select_statement1
+    [INSERT OVERWRITE [LOCAL] DIRECTORY directory2 select_statement2] ...
+
+
+    row_format
+      : DELIMITED [FIELDS TERMINATED BY char [ESCAPED BY char]] [COLLECTION ITEMS TERMINATED BY char]
+            [MAP KEYS TERMINATED BY char] [LINES TERMINATED BY char]
+            [NULL DEFINED AS char] (Note: Only available starting with Hive 0.13)
+
+    Standard Syntax:
+    INSERT INTO TABLE tablename [PARTITION (partcol1[=val1], partcol2[=val2] ...)] VALUES values_row [, values_row ...]
+
+    Where values_row is:
+    ( value [, value ...] )
+    where a value is either null or any valid SQL literal
+
+    Standard Syntax:
+    UPDATE tablename SET column = value [, column = value ...] [WHERE expression]
+#### 注意事项
+* load 目前只是copy与move
+* filepath 可以是目录（但是目录中不能包含下级目录)或单个文件
+* Hive 目前在load的时候会最一些基本检查，比如检查sequence文件不能load到textfile中
+* 如果没有制定overwrite，在hive 1.1.0 版本同样的文件名不会被覆盖
+*  TBLPROPERTIES ("immutable"="true") 表不能insert into
+* mult table insert 减少数据文件扫描
+* Update is available starting in hive 0.14.0
+* delete is available starting in hive 0.14.0
+* In version 0.14 it is recommended that you set hive.optimize.sort.dynamic.partition=false when doing deletes, as this produces more efficient execution plans.
+
+#### Dynamic partition
+    hive.exec.dynamic.partition   false    Needs to be set to true to enable dynamic partition inserts
+    hive.exec.dynamic.partition.mode strict    In strict mode, the user must specify at least one static partition
+    in case the user accidentally overwrites all partitions, in nonstrict mode all partitions are allowed to be dynamic
+    hive.exec.max.dynamic.partitions.pernode 100 Maximum number of dynamic partitions allowed to be created in each mapper/reducer node
+    hive.exec.max.dynamic.partitions 1000   Maximum number of dynamic partitions allowed to be created in total
+    hive.exec.max.created.files  100000  Maximum number of HDFS files created by all mappers/reducers in a MapReduce job
+    hive.error.on.empty.partition false  Whether to throw an exception if dynamic partition insert generates empty results
+#### Import/ Export
+    EXPORT TABLE tablename [PARTITION (part_column="value"[, ...])] TO 'export_target_path'
+    IMPORT [[EXTERNAL] TABLE new_or_original_tablename [PARTITION (part_column="value"[, ...])]]
+      FROM 'source_path'
+      [LOCATION 'import_target_path']
+
+    可用于大规模数据迁移
+## dml 特殊语句
+* top K set mapred.reduce.tasks = 1 SELECT * FROM sales SORT BY amount DESC LIMIT 5
+* 同一个group by 中distinct 只能用于同一列
+* Multi-Group-By
+* Map-side Aggregation set hive.map.aggr=true; better efficiency ,but more memory
+* sort by order by distribute by cluster by
+* Only equality joins, outer joins, and left semi joins are supported in Hive. Hive does not support join conditions that are not equality conditions
+* Hive converts joins over multiple tables into a single map/reduce job if for every table the same column is used in the join clauses
+* join largest tables appear last in the sequence
+* SELECT /*+ STREAMTABLE(a) */ a.val, b.val, c.val FROM a JOIN b ON (a.key = b.key1) JOIN c ON (c.key = b.key1) ［If the STREAMTABLE hint is omitted, Hive streams the rightmost table in the join.］
+* SELECT /*+ MAPJOIN(b) */ a.key, a.value   FROM a JOIN b ON a.key = b.key set hive.optimize.bucketmapjoin = true
+* If all the inputs are bucketed or sorted, and the join should be converted to a bucketized map-side join or bucketized sort-merge join.
+* 关于join更多信息请参考 [HiveJoins] [2]
+### mapjoin  bucket
+set hive.input.format=org.apache.hadoop.hive.ql.io.BucketizedHiveInputFormat;
+set hive.optimize.bucketmapjoin = true;
+set hive.optimize.bucketmapjoin.sortedmerge = true;
 
 ## 参考
 获取详细信息，请参考 [HiveDDL] [1]
 
 
 [1]: https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL "Hive DDL"
+[2]: https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Joins "Hive JOINS"
 
 
 
