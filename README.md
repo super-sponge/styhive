@@ -1,6 +1,15 @@
 学习研究Hive相关技术
 ======================
 
+### hive 指向hdfs更改名字
+    hive 指向hdfs更改名字后，hive中的表依然指向以前的hdfs，此中情况需要手工更改元数据（此语句针对的是hive 1.1.0, 其他版本请分析后执行
+    localhost 原来主机名字,host29新主机名字
+    set sql_safe_updates = 0;
+    
+    UPDATE hive.SDS  SET LOCATION=REPLACE(LOCATION,'localhost','host29') ;
+    update hive.DBS set DB_LOCATION_URI =REPLACE(DB_LOCATION_URI,'localhost','host29') ;
+    select * from hive.SDS;
+    select * from hive.DBS;
 
 ### hiveUDF 程序依赖程序包 groupID org.apache.hive
 * hive-exec
