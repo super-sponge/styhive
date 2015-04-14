@@ -93,6 +93,11 @@
 ### HiveServer2 Clients（beeline)
     !connect jdbc:hive2://host29:10000 hadoop hadoop org.apache.hive.jdbc.HiveDriver
     beeline -u jdbc:hive2://host29:10000 hadoop hadoop org.apache.hive.jdbc.HiveDriver
+    
+    SQuirrel SQL Client 配置（hiveserver 必须启动）
+        拷贝$HIVE_HOME/lib下面的jar到Extra class path 
+        拷贝hadoop-common*jar 到Extra class path
+        根据操作即可连接hive
 
 ---
 
