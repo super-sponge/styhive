@@ -421,6 +421,34 @@
     set hive.optimize.bucketmapjoin = true;
     set hive.optimize.bucketmapjoin.sortedmerge = true;
 
+## hive metastore
+### 添加审
+hive在0.9之后加入的审计日志，具体的信息在metastore下的org.apache.hadoop.hive.metastore.HiveMetaStore
+开启hive的审计日志，并做其分析
+实现：
+1.先保存其日志，格式为：org.apache.hadoop.hive.metastore.HiveMetaStore.AUDIT_FORMAT
+ 基于log4j，针对不同的日志配置不同的appender
+
+log4j.logger.org.apache.hadoop.hive.metastore.HiveMetaStore.audit=INFO,HIVEAUDIT
+
+log4j.appender.HIVEAUDIT=org.apache.log4j.FileAppender
+log4j.appender.HIVEAUDIT.File=${hive.log.dir}/audit.log
+log4j.appender.HIVEAUDIT.Append=false 
+log4j.appender.HIVEAUDIT.layout=org.apache.log4j.PatternLayout
+log4j.appender.HIVEAUDIT.layout.ConversionPattern=[%d{HH:mm:ss:SSS}][%C-%M] -%m%n
+2.直接对${hive.log.dir}/audit.log分析即可
+### 设置thrift线程池子大小
+    <name>hive.metastore.server.max.threads</name>
+      <value>200</value>
+    </property>
+    <property>
+      <name>hive.metastore.server.min.threads</name>
+      <value>10</value>
+    </property>
+    
+    备注：最小默认200，如果没设定最小值，设最小于200，启metastore要报错。此时应同时设定最小值
+
+
 ## 参考
 获取详细信息，请参考 [HiveDDL] [1]
 
